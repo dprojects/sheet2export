@@ -1,12 +1,6 @@
 # Description
 
-This is FreeCAD macro to export spreadsheet. It has been created to support my woodworking project [getDimensions](https://github.com/dprojects/getDimensions).
-
-![001](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/001.png)
-
-![002](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/002.png)
-
-![003](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/003.png)
+This is FreeCAD macro to export spreadsheet to file. It has been created to support my woodworking project [getDimensions](https://github.com/dprojects/getDimensions). However, it might be useful for other FreeCAD projects.
 
 # Main features
 
@@ -21,6 +15,14 @@ This is FreeCAD macro to export spreadsheet. It has been created to support my w
 	* custom empty cell content,
 	* custom CSV separator,
 	* CSS table border decoration.
+
+
+![001](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/001.png)
+
+![002](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/002.png)
+
+![003](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/003.png)
+
 
 # Known issues
 
