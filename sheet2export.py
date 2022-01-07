@@ -2,10 +2,11 @@
 
 # FreeCAD macro for spreadsheet export
 # Author: Darek L (aka dprojects)
-# Version: 2022.01.02
+# Version: 2022.01.07
 # Latest version: https://github.com/dprojects/sheet2export
 
 import FreeCAD, Draft, Spreadsheet
+from PySide import QtGui, QtCore
 
 # ###################################################################################################################
 # Main Settings ( CHANGE HERE IF NEEDED )
@@ -35,17 +36,23 @@ sFilePath = "./"
 # Additional Settings ( CHANGE HERE IF NEEDED )
 # ###################################################################################################################
 
+
 # Empty cell content:
-sEmptyCell = "&nbsp;" # "&nbsp;" but this can be any character "-", "N/A" or "0"
+if sFileType == "html":
+	sEmptyCell = "&nbsp;"
+else:
+	sEmptyCell = ""
 
 # Separator for CSV:
 sSepCSV = ","
 
-# CSS table border decoration:
-sBorderSize = "1px" # set to "0" to turn it off
-sBorderType = "dotted" # dotted dashed solid
-sBorderPosition = "bottom" # bottom left right top
-sBorderColor = "#000000"
+# custom CSS rules
+sCustomCSS ="border-bottom:1px dotted #000000;"
+
+# show Qt boxes
+# "yes" - to show
+# "no" - to hide
+sQT = "yes"
 
 
 # ###################################################################################################################
@@ -68,8 +75,14 @@ gSheet = gAD # will be overwritten later
 # init output result
 gOUT = ""
 
+# exported files names
+gExpFilesN = ""
+
 # console print separator
 gSepC = "\n ================================================================ \n"
+
+# for cancel buttons assign "no"
+gExecute = "yes"
 
 
 # ###################################################################################################################
@@ -95,8 +108,288 @@ dbSKL = dict() # letters for value
 
 
 # ###################################################################################################################
-# Support for errors
+# Support for Qt GUI
 # ###################################################################################################################
+
+
+# ###################################################################################################################
+def showQtMain():
+
+	global gExecute
+
+	# ############################################################################
+	# Qt Main Class
+	# ############################################################################
+	
+	class QtMainClass(QtGui.QDialog):
+
+		def __init__(self):
+			super(QtMainClass, self).__init__()
+			self.initUI()
+
+		def initUI(self):
+			
+			# window
+			self.result = userCancelled
+			self.setGeometry(250, 250, 500, 350)
+			self.setWindowTitle("sheet2export - settings")
+			self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+
+			# ############################################################################
+			# export type
+			# ############################################################################
+
+			# label
+			self.eTypeL = QtGui.QLabel("Export type:", self)
+			self.eTypeL.move(10, 13)
+			
+			# options
+			self.eTypeList = ("export all spreadsheets", "export selected spreadsheet only")
+			self.eTypeO = QtGui.QComboBox(self)
+			self.eTypeO.addItems(self.eTypeList)
+			self.eTypeO.setCurrentIndex(self.eTypeList.index("export all spreadsheets"))
+			self.eTypeO.activated[str].connect(self.setEType)
+			self.eTypeO.move(100, 10)
+
+			# ############################################################################
+			# file path
+			# ############################################################################
+
+			# label
+			self.fPathL = QtGui.QLabel("File path:", self)
+			self.fPathL.move(10, 43)
+
+			# text input
+			self.fPathTi = QtGui.QLineEdit(self)
+			self.fPathTi.setText(str(sFilePath))
+			self.fPathTi.setFixedWidth(230)
+			self.fPathTi.move(100, 40)
+
+			# ############################################################################
+			# file type
+			# ############################################################################
+			
+			# label
+			self.fileTypeL = QtGui.QLabel("File type:", self)
+			self.fileTypeL.move(10, 73)
+			
+			# options
+			self.fileTypeOlist = ("csv","html","json","md")
+			self.fileTypeO = QtGui.QComboBox(self)
+			self.fileTypeO.addItems(self.fileTypeOlist)
+			self.fileTypeO.setCurrentIndex(self.fileTypeOlist.index("html"))
+			self.fileTypeO.activated[str].connect(self.setFileType)
+			self.fileTypeO.move(100, 70)
+
+			# info screen
+			self.fileTypeOIS = QtGui.QLabel("HyperText Markup Language (.html file)          ", self)
+			self.fileTypeOIS.move(165, 73)
+
+			# ############################################################################
+			# empty cell
+			# ############################################################################
+
+			# label
+			self.emptyCellL = QtGui.QLabel("Empty cell content:", self)
+			self.emptyCellL.move(10, 143)
+
+			# text input
+			self.emptyCellTi = QtGui.QLineEdit(self)
+			self.emptyCellTi.setText(str(sEmptyCell))
+			self.emptyCellTi.setFixedWidth(100)
+			self.emptyCellTi.move(140, 140)
+
+			# ############################################################################
+			# CSV separator
+			# ############################################################################
+			
+			# label
+			self.csvSL = QtGui.QLabel("Set CSV separator:", self)
+			self.csvSL.move(10, 183)
+			self.csvSL.hide()
+
+			# text input
+			self.csvSTi = QtGui.QLineEdit(self)
+			self.csvSTi.setText(str(sSepCSV))
+			self.csvSTi.setFixedWidth(100)
+			self.csvSTi.move(140, 180)
+			self.csvSTi.hide()
+
+			# ############################################################################
+			# custom CSS rules
+			# ############################################################################
+
+			# border label
+			self.customCSSbl = QtGui.QLabel("Step 1. Border decoration:", self)
+			self.customCSSbl.move(10, 193)
+
+			# border options
+			self.customCSSbol = ("no border","horizontal dotted","vertical solid","normal solid", "strong solid")
+			self.customCSSbo = QtGui.QComboBox(self)
+			self.customCSSbo.addItems(self.customCSSbol)
+			self.customCSSbo.setCurrentIndex(self.customCSSbol.index("horizontal dotted"))
+			self.customCSSbo.activated[str].connect(self.setCustomCSSbo)
+			self.customCSSbo.move(180, 190)
+
+			# text input label
+			self.customCSStil = QtGui.QLabel("Step 2. Custom CSS rules for each cell (edit or add):", self)
+			self.customCSStil.move(10, 230)
+
+			# text input
+			self.customCSSti = QtGui.QLineEdit(self)
+			self.customCSSti.setText(str(sCustomCSS))
+			self.customCSSti.setFixedWidth(340)
+			self.customCSSti.move(10, 250)
+
+			# ############################################################################
+			# buttons
+			# ############################################################################
+
+			# button - cancel
+			cancelButton = QtGui.QPushButton('Cancel', self)
+			cancelButton.clicked.connect(self.onCancel)
+			cancelButton.setAutoDefault(True)
+			cancelButton.move(120, 300)
+			
+			# button - ok
+			okButton = QtGui.QPushButton('OK', self)
+			okButton.clicked.connect(self.onOk)
+			okButton.move(300, 300)
+
+			# ############################################################################
+			# show
+			# ############################################################################
+
+			self.show()
+
+
+		# ############################################################################
+		# actions
+		# ############################################################################
+
+		def setFileType(self, selectedText):
+			global sFileType
+
+			sFileType = str(selectedText)
+
+			if selectedText == "csv":
+				self.fileTypeOIS.setText("Comma-separated values ( .csv file )")
+				self.customCSSbl.hide()
+				self.customCSSbo.hide()
+				self.customCSStil.hide()
+				self.customCSSti.hide()
+				self.csvSL.show()
+				self.csvSTi.show()
+				self.emptyCellTi.setText("")
+
+			if selectedText == "html":
+				self.fileTypeOIS.setText("HyperText Markup Language ( .html file )")
+				self.csvSL.hide()
+				self.csvSTi.hide()
+				self.customCSSbl.show()
+				self.customCSSbo.show()
+				self.customCSStil.show()
+				self.customCSSti.show()
+				self.emptyCellTi.setText(str(sEmptyCell))
+
+			if selectedText == "json":
+				self.fileTypeOIS.setText("JavaScript Object Notation ( .json file )")
+				self.csvSL.hide()
+				self.csvSTi.hide()
+				self.customCSSbl.hide()
+				self.customCSSbo.hide()
+				self.customCSStil.hide()
+				self.customCSSti.hide()
+				self.emptyCellTi.setText("")
+
+			if selectedText == "md":
+				self.fileTypeOIS.setText("MarkDown ( .md file )")
+				self.csvSL.hide()
+				self.csvSTi.hide()
+				self.customCSSbl.hide()
+				self.customCSSbo.hide()
+				self.customCSStil.hide()
+				self.customCSSti.hide()
+				self.emptyCellTi.setText("")
+
+		def setEType(self, selectedText):
+			global sExportType
+
+			if selectedText == "export all spreadsheets":
+				sExportType = "a"
+			if selectedText == "export selected spreadsheet only":
+				sExportType = "s"
+
+		def setCustomCSSbo(self, selectedText):
+			global sCustomCSS
+
+			if selectedText == "no border":
+				sCustomCSS = "border:0px dotted #000000;"
+				self.customCSSti.setText(str(sCustomCSS))
+			if selectedText == "horizontal dotted":
+				sCustomCSS = "border-bottom:1px dotted #000000;"
+				self.customCSSti.setText(str(sCustomCSS))
+			if selectedText == "vertical solid":
+				sCustomCSS = "border-left:1px solid #000000;"
+				self.customCSSti.setText(str(sCustomCSS))
+			if selectedText == "normal solid":
+				sCustomCSS = "border:1px solid #000000;"
+				self.customCSSti.setText(str(sCustomCSS))
+			if selectedText == "strong solid":
+				sCustomCSS = "border:3px solid #D1D1D1;"
+				self.customCSSti.setText(str(sCustomCSS))
+
+		def onCancel(self):
+			self.result = userCancelled
+			self.close()
+		def onOk(self):
+			self.result = userOK
+			self.close()
+	
+	# ############################################################################
+	# final settings
+	# ############################################################################
+
+	userCancelled = "Cancelled"
+	userOK = "OK"
+	
+	form = QtMainClass()
+	form.exec_()
+	
+	if form.result == userCancelled:
+		gExecute = "no"
+		pass
+	
+	if form.result == userOK:
+		global sCustomCSS
+		global sSepCSV
+		global sEmptyCell
+		global sFilePath
+
+		sCustomCSS = form.customCSSti.text()
+		sSepCSV = form.csvSTi.text()
+		sEmptyCell = form.emptyCellTi.text()
+		sFilePath = form.fPathTi.text()
+
+
+# ###################################################################################################################
+# Support for errors and info
+# ###################################################################################################################
+
+
+# ###################################################################################################################
+def showInfo(iText):
+
+	if sQT == "yes":
+
+		QtGui.QMessageBox.information(None,"",str(iText))
+
+	else:
+		FreeCAD.Console.PrintMessage(gSepC)
+		FreeCAD.Console.PrintMessage(str(iText))
+		FreeCAD.Console.PrintMessage(gSepC)
+	
+	return 0
 
 
 # ###################################################################################################################
@@ -158,6 +451,7 @@ def CSVrowClose():
 def CSVempty(iKey, iC, iR):
 	global gOUT
 
+	gOUT += str(sEmptyCell)
 	gOUT += sSepCSV
 
 
@@ -210,11 +504,10 @@ def HTMLempty(iKey, iC, iR):
 	global gOUT
 
 	gOUT += '<TD '
-	gOUT += 'style="border-' 
-	gOUT += str(sBorderPosition) + ':'
-	gOUT += str(sBorderSize) + ' '
-	gOUT += str(sBorderType) + ' '
-	gOUT += str(sBorderColor) + ';"'
+	gOUT += 'style=' 
+	gOUT += '"'
+	gOUT += str(sCustomCSS)
+	gOUT += '"'
 	gOUT += '>'
 	gOUT += str(sEmptyCell)
 	gOUT += "</TD>"
@@ -236,13 +529,9 @@ def HTMLcell(iKey, iCell, iC, iR):
 	except:
 		gOUT += ''
 
-	gOUT += 'style="'
-
-	gOUT += 'border-' 
-	gOUT += str(sBorderPosition) + ':'
-	gOUT += str(sBorderSize) + ' '
-	gOUT += str(sBorderType) + ' '
-	gOUT += str(sBorderColor) + ';'
+	gOUT += 'style=' 
+	gOUT += '"'
+	gOUT += str(sCustomCSS)
 	
 	try:
 		gOUT += 'text-align:'+str(dbCPA[iKey]).split("|")[0] + ';'
@@ -307,7 +596,7 @@ def JSONempty(iKey, iC, iR):
 
 	key = str(dbSKL[str(iC)])
 	gOUT += '"' + str(key) + '":'
-	gOUT += '""'
+	gOUT += '"' + str(sEmptyCell) + '"'
 	gOUT += ','
 
 
@@ -387,6 +676,7 @@ def MDempty(iKey, iC, iR):
 	global gOUT
 
 	gOUT += '|   '
+	gOUT += str(sEmptyCell)
 
 
 # ###################################################################################################################
@@ -684,6 +974,27 @@ def selectCell(iKey, iCell, iC, iR):
 # ###################################################################################################################
 def setOUTPUT():
 
+	if sQT == "yes":
+		if int(dbMaxR * dbMaxC) > 100000:
+
+			info = "The spreadsheet "+str(gSheet.Label)+" has: \n\n"
+			info += str(dbMaxC) + " columns \n"
+			info += str(dbMaxR) + " rows. \n"
+			info += "\n"
+			info += "This may take several minutes to export file. "
+			info += "\n"
+			info += "Would you like to wait (ok) or skip (cancel) the spreadsheet?\t\t"
+			info += "\n\n"
+			reply = QtGui.QMessageBox.question(None, "", str(info), 
+				QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+			
+			if reply == QtGui.QMessageBox.Yes:
+				skip = 0
+
+			if reply == QtGui.QMessageBox.No:
+				skip = 1
+				return -1
+	
 	# set begin of the spreadsheet table
 	selectBegin()
 	
@@ -768,6 +1079,8 @@ def setOUTPUT():
 # ###################################################################################################################
 def saveToDisk():
 
+	global gExpFilesN
+
 	import os, sys
 	from os.path import expanduser
 	
@@ -775,13 +1088,10 @@ def saveToDisk():
 	vFileName = str(gFile) + "." + str(sFileType)
 	vFile = os.path.join(vRoot, vFileName)
 	
-	FreeCAD.Console.PrintMessage("\n")
-	FreeCAD.Console.PrintMessage("Saved at: ")
-	FreeCAD.Console.PrintMessage(vFile)
-	FreeCAD.Console.PrintMessage("\n")
-	
 	with open(vFile, 'w') as vFH:
 		vFH.write("%s" % gOUT)
+
+	gExpFilesN += vFile + "\t\n"
 
 
 # ###################################################################################################################
@@ -797,7 +1107,8 @@ def runTasks():
 		showError(gSheet, "setDB" , "Databese is not set correctly.")
 		
 	try:
-		setOUTPUT()
+		if setOUTPUT() == -1:
+			return 0
 	except:
 		showError(gSheet, "setOUTPUT" , "Output is not set correctly.")
 		
@@ -811,75 +1122,75 @@ def runTasks():
 # MAIN
 # ###################################################################################################################
 
-# set info separator
-FreeCAD.Console.PrintMessage(gSepC)
+# show Qt box
+if sQT == "yes":
+	showQtMain()
 
-# set spreadsheet key databases
-try:
-	setSK()
-except:
-	showError(gAD, "setSK" , "Spreadsheet key databases is not set correctly.")
+# skip if cancel button
+if gExecute == "yes":
 
-# for selected
-if sExportType == "s":
+	# set spreadsheet key databases
 	try:
-		# try set selected spreadsheet
-		gSheet = FreeCADGui.Selection.getSelection()[0]
+		setSK()
 	except:
-		showError(gAD, "main", "Please select spreadsheet to export.")
-
+		showError(gAD, "setSK" , "Spreadsheet key databases is not set correctly.")
+	
+	# for selected
+	if sExportType == "s":
+		try:
+			# try set selected spreadsheet
+			gSheet = FreeCADGui.Selection.getSelection()[0]
+		except:
+			showInfo("Please select spreadsheet to export.")
+	
 		# check if this is correct spreadsheet object
 		if gSheet.isDerivedFrom("Spreadsheet::Sheet"):
-
+	
 			# set output filename
 			gFile = gAD.Label + " - " + gSheet.Label
-
+	
 			# set info
 			FreeCAD.Console.PrintMessage("\n")
 			FreeCAD.Console.PrintMessage("Exporting: ")
 			FreeCAD.Console.PrintMessage(gSheet.Label + " ")
-
+	
 			# create output file
 			runTasks()
 
-# for all spreadsheets
-elif sExportType == "a":
-
-	# search all objects and export spreadsheets
-	for obj in gOBs:
-
-		# try set spreadsheet
-		gSheet = obj
-
-		# check if this is correct spreadsheet object
-		if gSheet.isDerivedFrom("Spreadsheet::Sheet"):
-
-				# set output filename
-			gFile = gAD.Label + " - " + gSheet.Label
+			# info
+			showInfo("Exported files: \n\n"+str(gExpFilesN)+"\n\n")
+	
 		else:
-			continue
+			showInfo("Please select spreadsheet to export.")
 
-		# set info
-		FreeCAD.Console.PrintMessage("\n")
-		FreeCAD.Console.PrintMessage("Exporting: ")
-		FreeCAD.Console.PrintMessage(gSheet.Label + " ")
-		
-		# create output file
-		resetDB()
-		runTasks()
+	# for all spreadsheets
+	elif sExportType == "a":
+	
+		# search all objects and export spreadsheets
+		for obj in gOBs:
+	
+			# try set spreadsheet
+			gSheet = obj
+	
+			# check if this is correct spreadsheet object
+			if gSheet.isDerivedFrom("Spreadsheet::Sheet"):
+	
+					# set output filename
+				gFile = gAD.Label + " - " + gSheet.Label
+			else:
+				continue
+	
+			# set info
+			FreeCAD.Console.PrintMessage("\n")
+			FreeCAD.Console.PrintMessage("Exporting: ")
+			FreeCAD.Console.PrintMessage(gSheet.Label + " ")
+			
+			# create output file
+			resetDB()
+			runTasks()
 
-else:
-	showError(gAD, "main", "Please set sExportType correctly.")
-
-
-# set info separator
-FreeCAD.Console.PrintMessage(gSepC)
-
-
-# ###################################################################################################################
-# Reload to see changes
-# ###################################################################################################################
-
-
-gAD.recompute()
+		# info
+		showInfo("Exported files: \n\n"+str(gExpFilesN)+"\n\n")
+	else:
+		showError(gAD, "main", "Please set sExportType correctly.")
 
