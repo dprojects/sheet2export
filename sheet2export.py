@@ -2,7 +2,7 @@
 
 # FreeCAD macro for spreadsheet export
 # Author: Darek L (aka dprojects)
-# Version: 2022.01.07
+# Version: 2022.01.09
 # Latest version: https://github.com/dprojects/sheet2export
 
 import FreeCAD, Draft, Spreadsheet
@@ -132,7 +132,7 @@ def showQtMain():
 			# window
 			self.result = userCancelled
 			self.setGeometry(250, 250, 500, 350)
-			self.setWindowTitle("sheet2export - settings")
+			self.setWindowTitle("sheet2export - default settings")
 			self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
 			# ############################################################################
@@ -144,12 +144,16 @@ def showQtMain():
 			self.eTypeL.move(10, 13)
 			
 			# options
-			self.eTypeList = ("export all spreadsheets", "export selected spreadsheet only")
+			self.eTypeList = ("a", "s")
 			self.eTypeO = QtGui.QComboBox(self)
 			self.eTypeO.addItems(self.eTypeList)
-			self.eTypeO.setCurrentIndex(self.eTypeList.index("export all spreadsheets"))
+			self.eTypeO.setCurrentIndex(self.eTypeList.index("a"))
 			self.eTypeO.activated[str].connect(self.setEType)
 			self.eTypeO.move(100, 10)
+			
+			# info screen
+			self.eTypeIS = QtGui.QLabel("all spreadsheets                  ", self)
+			self.eTypeIS.move(145, 13)
 
 			# ############################################################################
 			# file path
@@ -224,7 +228,8 @@ def showQtMain():
 			self.customCSSbl.move(10, 193)
 
 			# border options
-			self.customCSSbol = ("no border","horizontal dotted","vertical solid","normal solid", "strong solid")
+			self.customCSSbol = ("no border","horizontal dotted","vertical solid",
+						"normal solid", "strong solid", "3d effect")
 			self.customCSSbo = QtGui.QComboBox(self)
 			self.customCSSbo.addItems(self.customCSSbol)
 			self.customCSSbo.setCurrentIndex(self.customCSSbol.index("horizontal dotted"))
@@ -238,7 +243,7 @@ def showQtMain():
 			# text input
 			self.customCSSti = QtGui.QLineEdit(self)
 			self.customCSSti.setText(str(sCustomCSS))
-			self.customCSSti.setFixedWidth(340)
+			self.customCSSti.setFixedWidth(460)
 			self.customCSSti.move(10, 250)
 
 			# ############################################################################
@@ -315,10 +320,12 @@ def showQtMain():
 		def setEType(self, selectedText):
 			global sExportType
 
-			if selectedText == "export all spreadsheets":
+			if selectedText == "a":
 				sExportType = "a"
-			if selectedText == "export selected spreadsheet only":
+				self.eTypeIS.setText("all spreadsheets")
+			if selectedText == "s":
 				sExportType = "s"
+				self.eTypeIS.setText("selected spreadsheet only")
 
 		def setCustomCSSbo(self, selectedText):
 			global sCustomCSS
@@ -337,6 +344,11 @@ def showQtMain():
 				self.customCSSti.setText(str(sCustomCSS))
 			if selectedText == "strong solid":
 				sCustomCSS = "border:3px solid #D1D1D1;"
+				self.customCSSti.setText(str(sCustomCSS))
+			if selectedText == "3d effect":
+				sCustomCSS = "border-bottom:5px solid #D1D1D1;"
+				sCustomCSS += "border-right:5px solid #D1D1D1;"
+				sCustomCSS += "padding:5px 10px;"
 				self.customCSSti.setText(str(sCustomCSS))
 
 		def onCancel(self):
@@ -382,7 +394,7 @@ def showInfo(iText):
 
 	if sQT == "yes":
 
-		QtGui.QMessageBox.information(None,"",str(iText))
+		QtGui.QMessageBox.information(None,"sheet2export",str(iText))
 
 	else:
 		FreeCAD.Console.PrintMessage(gSepC)
@@ -632,7 +644,9 @@ def MDbegin():
 		# set alignment
 		try:	
 
-			key = str(dbSKL[str(c)]) + str(1)
+			# check 2nd row with data
+			# first row can be header with colspans
+			key = str(dbSKL[str(c)]) + str(2)
 			a = str(dbCPA[key]).split("|")[0]
 
 			if a == "left":
@@ -1140,29 +1154,29 @@ if gExecute == "yes":
 		try:
 			# try set selected spreadsheet
 			gSheet = FreeCADGui.Selection.getSelection()[0]
+
+			# check if this is correct spreadsheet object
+			if gSheet.isDerivedFrom("Spreadsheet::Sheet"):
+		
+				# set output filename
+				gFile = gAD.Label + " - " + gSheet.Label
+		
+				# set info
+				FreeCAD.Console.PrintMessage("\n")
+				FreeCAD.Console.PrintMessage("Exporting: ")
+				FreeCAD.Console.PrintMessage(gSheet.Label + " ")
+		
+				# create output file
+				runTasks()
+	
+				# info
+				showInfo("Exported files: \n\n"+str(gExpFilesN)+"\n\n")	
+			else:
+				showInfo("Please select spreadsheet to export.")
 		except:
 			showInfo("Please select spreadsheet to export.")
 	
-		# check if this is correct spreadsheet object
-		if gSheet.isDerivedFrom("Spreadsheet::Sheet"):
-	
-			# set output filename
-			gFile = gAD.Label + " - " + gSheet.Label
-	
-			# set info
-			FreeCAD.Console.PrintMessage("\n")
-			FreeCAD.Console.PrintMessage("Exporting: ")
-			FreeCAD.Console.PrintMessage(gSheet.Label + " ")
-	
-			# create output file
-			runTasks()
-
-			# info
-			showInfo("Exported files: \n\n"+str(gExpFilesN)+"\n\n")
-	
-		else:
-			showInfo("Please select spreadsheet to export.")
-
+		
 	# for all spreadsheets
 	elif sExportType == "a":
 	

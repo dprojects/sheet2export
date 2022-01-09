@@ -15,13 +15,15 @@ This is FreeCAD macro to export spreadsheet to file. It has been created to supp
 	* custom CSV separator,
 	* custom empty cell content,
 	* custom CSS decoration for each cell,
-	* Qt GUI interface.
+	* Qt Graphical User Interface (GUI).
 
 ![001](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/001.png)
 
 ![002](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/002.png)
 
 ![003](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/003.png)
+
+![004](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/004.png)
 
 # Known issues
 
