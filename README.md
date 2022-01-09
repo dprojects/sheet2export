@@ -17,13 +17,23 @@ This is FreeCAD macro to export spreadsheet to file. It has been created to supp
 	* custom CSS decoration for each cell,
 	* Qt Graphical User Interface (GUI).
 
-![001](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/001.png)
+# Screenshots examples
 
-![002](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/002.png)
+* Qt Graphical User Interface (GUI) main screen with `default settings`:
 
-![003](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/003.png)
+	![001](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/001.png)
+	
+* Info screen at the end about exported files:
 
-![004](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/004.png)
+	![002](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/002.png)
+	
+* Example `html` file output with `3d effect` border decoration:
+
+	![003](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/003.png)
+
+* The `json` file exemple viewed at [json2table.com](http://json2table.com):
+
+	![004](https://raw.githubusercontent.com/dprojects/sheet2export/master/Screenshots/004.png)
 
 # Known issues
 
