@@ -2,7 +2,7 @@
 
 # FreeCAD macro for spreadsheet export
 # Author: Darek L (aka dprojects)
-# Version: 2022.01.09
+# Version: 2022.01.19
 # Latest version: https://github.com/dprojects/sheet2export
 
 import FreeCAD, Draft, Spreadsheet
@@ -487,7 +487,7 @@ def HTMLbegin():
 	# there is no need to add html document header here because if the file is html table 
 	# only the file is correctly parsed by browser, moreover this is easier to copy the 
 	# file content and place it to the post or other web page
-	gOUT += '<TABLE>'
+	gOUT += '<TABLE>\n'
 
 
 # ###################################################################################################################
@@ -501,35 +501,63 @@ def HTMLend():
 def HTMLrowOpen():
 	global gOUT
 
-	gOUT += "<TR>"
+	gOUT += " <TR>\n"
 
 
 # ###################################################################################################################
 def HTMLrowClose():
 	global gOUT
 
-	gOUT += "</TR>"
+	gOUT += " </TR>\n"
 
 
 # ###################################################################################################################
 def HTMLempty(iKey, iC, iR):
 	global gOUT
 
-	gOUT += '<TD '
+	gOUT += '  <TD '
+
+	try:
+		gOUT += 'colspan="'+str(dbCPCS[iKey]) + '" '
+	except:
+		gOUT += ''
+
+	try:
+		gOUT += 'rowspan="'+str(dbCPRS[iKey]) + '" '
+	except:
+		gOUT += ''
+
 	gOUT += 'style=' 
 	gOUT += '"'
 	gOUT += str(sCustomCSS)
+	
+	try:
+		gOUT += 'text-align:'+str(dbCPA[iKey]).split("|")[0] + ';'
+	except:
+		gOUT += ''
+	
+	try:
+		gOUT += 'background-color:'+str(dbCPB[iKey]) + ';'
+	except:
+		gOUT += ''
+	
+	try:
+		gOUT += 'font-weight:'+str(dbCPS[iKey]) + ';'
+	except:
+		gOUT += ''
+	
+
 	gOUT += '"'
 	gOUT += '>'
 	gOUT += str(sEmptyCell)
-	gOUT += "</TD>"
+	gOUT += "</TD>\n"
 
 
 # ###################################################################################################################
 def HTMLcell(iKey, iCell, iC, iR):
 	global gOUT
 
-	gOUT += '<TD '
+	gOUT += '  <TD '
 
 	try:
 		gOUT += 'colspan="'+str(dbCPCS[iKey]) + '" '
@@ -564,7 +592,7 @@ def HTMLcell(iKey, iCell, iC, iR):
 	gOUT += '"'
 	gOUT += '>'
 	gOUT += str(iCell)
-	gOUT += "</TD>"
+	gOUT += "</TD>\n"
 
 
 # ###################################################################################################################
@@ -681,7 +709,7 @@ def MDrowOpen():
 def MDrowClose():
 	global gOUT
 
-	gOUT += '   |'
+	gOUT += '|'
 	gOUT += '\n'
 
 
@@ -699,6 +727,7 @@ def MDcell(iKey, iCell, iC, iR):
 
 	gOUT += '|   '
 	gOUT += str(iCell)
+	gOUT += '   '
 
 
 # ###################################################################################################################
@@ -1035,7 +1064,7 @@ def setOUTPUT():
 			vKey = str(dbSKL[str(c)]) + str(r)
 
 			try:
-				
+
 				# get content
 				vCell = str(dbCPC[vKey])
 
@@ -1047,19 +1076,22 @@ def setOUTPUT():
 					skip = 1
 
 				# set the cell content
-				selectCell(vKey, vCell, c, r)
+				if vCell != "":
+					selectCell(vKey, vCell, c, r)					
+				else:
+					selectEmpty(vKey, c, r)
 
 			except:
 
 				# if there was no such cell access point it will be empty cell
 				# if there is open colspan this should be skipped
-				if colSpan == 0 and rowSpan == 0:
-					selectEmpty(vKey, c, r)
+				if sFileType == "html":
+					if colSpan == 0 or  rowSpan == 0:
+						selectEmpty(vKey, c, r)
 
 				# colspan is not supported by the file type
-				if sFileType != "html":
-					if colSpan != 0 or  rowSpan != 0:
-						selectEmpty(vKey, c, r)
+				else:
+					selectEmpty(vKey, c, r)
 
 			# if the cell was written and there is colspan open
 			if colSpan > 0:
@@ -1136,6 +1168,7 @@ def runTasks():
 # MAIN
 # ###################################################################################################################
 
+
 # show Qt box
 if sQT == "yes":
 	showQtMain()
@@ -1208,3 +1241,5 @@ if gExecute == "yes":
 	else:
 		showError(gAD, "main", "Please set sExportType correctly.")
 
+
+# ###################################################################################################################
