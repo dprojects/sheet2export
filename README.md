@@ -1,8 +1,10 @@
 # Description
 
-<img align="left" src="https://raw.githubusercontent.com/dprojects/Woodworking/master/Icons/sheet2export.png"> This is FreeCAD macro to export spreadsheet to file. It has been created to support my woodworking project [getDimensions](https://github.com/dprojects/getDimensions). However, it might be useful for other FreeCAD projects. This tool is also part of [Woodworking workbench](https://github.com/dprojects/Woodworking).
+<img align="left" src="https://raw.githubusercontent.com/dprojects/Woodworking/master/Icons/sheet2export.png"> This is FreeCAD macro to export spreadsheet to file. It has been created to support my woodworking project [getDimensions](https://github.com/dprojects/getDimensions). However, it might be useful for other FreeCAD projects. 
 
-<br><br><br><br><br>
+**Note:** This tool is also part of [Woodworking workbench](https://github.com/dprojects/Woodworking).
+
+<br><br><br><br>
 
 # Main features
 
