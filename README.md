@@ -44,11 +44,10 @@
 * **Issue**: Too slow for big data like 200 columns x 800 rows.
 	* **Workaround**: It takes about 5 minutes on my slow laptop. For the analysis of scientific big data use rather something based on regular expressions, direct XML parsing and mapping. Maybe in the future there will be implemented speed boost feature to improve that but currently I do not have in mind any specific science file type to adjust regular expressions well.
 
-# Contact
-
-Please add all comments and questions to the dedicated
-[FreeCAD forum thread](https://forum.freecadweb.org/viewtopic.php?f=22&t=64985).
-
 # License
 
-MIT
+[MIT](https://github.com/dprojects/Woodworking/blob/master/LICENSE) for all Woodworking workbench content, so it is more free than FreeCAD.
+
+# Contact
+
+For questions, feature requests, please open issue at: [github.com/dprojects/Woodworking/issues](https://github.com/dprojects/Woodworking/issues)
